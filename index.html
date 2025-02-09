@@ -56,17 +56,49 @@
             background: white;
             border-radius: 5px;
             transition: 0.3s;
+            position: relative;
         }
         .controls button:hover {
             background: lightgray;
         }
+        .settings-container {
+            position: relative;
+        }
+        .settings-menu {
+            display: none;
+            position: absolute;
+            top: 40px;
+            left: 0;
+            background: white;
+            color: black;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            width: 200px;
+        }
+        .settings-menu input {
+            width: 100%;
+            margin-top: 5px;
+        }
+        .settings-menu button {
+            margin-top: 5px;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
-    <video id="background-video" src="background.mp4" loop></video>
+    <video id="background-video" loop></video>
     <div class="branding">WorkRythm</div>
     <div class="controls">
-        <button onclick="openSettings()">⚙️ Settings</button>
+        <div class="settings-container">
+            <button onclick="toggleSettings()">⚙️ Settings</button>
+            <div class="settings-menu" id="settings-menu">
+                <label>Work Time: <input type="number" id="work-time" value="25" min="1"></label><br>
+                <label>Break Time: <input type="number" id="break-time" value="5" min="1"></label><br>
+                <label>Custom Video URL: <input type="text" id="video-url" placeholder="Enter video URL"></label><br>
+                <button onclick="applySettings()">Apply</button>
+            </div>
+        </div>
         <div class="timer" id="timer">25:00</div>
         <button onclick="startTimer()">Start</button>
         <button onclick="pauseTimer()">Pause</button>
@@ -74,8 +106,10 @@
         <button onclick="toggleDarkMode()">Dark Mode</button>
     </div>
     <script>
-        let timeLeft = 1500;
-        let breakTime = 300;
+        let workDuration = 25 * 60;
+        let breakDuration = 5 * 60;
+        let timeLeft = workDuration;
+        let isWorkSession = true;
         let timerInterval;
         let isDarkMode = false;
         let video = document.getElementById("background-video");
@@ -91,8 +125,10 @@
                     } else {
                         clearInterval(timerInterval);
                         timerInterval = null;
+                        isWorkSession = !isWorkSession;
+                        timeLeft = isWorkSession ? workDuration : breakDuration;
+                        updateDisplay();
                         beepSound.play();
-                        video.style.display = "none";
                     }
                 }, 1000);
             }
@@ -107,9 +143,11 @@
         function resetTimer() {
             clearInterval(timerInterval);
             timerInterval = null;
-            timeLeft = 1500;
+            timeLeft = workDuration;
+            isWorkSession = true;
             updateDisplay();
             video.style.display = "none";
+            video.pause();
         }
         
         function updateDisplay() {
@@ -125,16 +163,29 @@
             document.body.style.color = isDarkMode ? "#000" : "#fff";
         }
         
-        function openSettings() {
-            let newWorkTime = prompt("Enter work duration in minutes:");
-            let newBreakTime = prompt("Enter break duration in minutes:");
-            if (newWorkTime && !isNaN(newWorkTime) && newWorkTime > 0) {
-                timeLeft = newWorkTime * 60;
+        function toggleSettings() {
+            let menu = document.getElementById("settings-menu");
+            menu.style.display = menu.style.display === "block" ? "none" : "block";
+        }
+        
+        function applySettings() {
+            let newWorkTime = parseInt(document.getElementById("work-time").value, 10);
+            let newBreakTime = parseInt(document.getElementById("break-time").value, 10);
+            let newVideoURL = document.getElementById("video-url").value;
+            
+            if (newWorkTime && newWorkTime > 0) {
+                workDuration = newWorkTime * 60;
             }
-            if (newBreakTime && !isNaN(newBreakTime) && newBreakTime > 0) {
-                breakTime = newBreakTime * 60;
+            if (newBreakTime && newBreakTime > 0) {
+                breakDuration = newBreakTime * 60;
             }
+            if (newVideoURL) {
+                video.src = newVideoURL;
+            }
+            
+            timeLeft = isWorkSession ? workDuration : breakDuration;
             updateDisplay();
+            document.getElementById("settings-menu").style.display = "none";
         }
         
         let beepSound = new Audio("beep.mp3");
