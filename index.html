@@ -103,7 +103,7 @@
         <button onclick="startTimer()">Start</button>
         <button onclick="pauseTimer()">Pause</button>
         <button onclick="resetTimer()">Reset</button>
-        <button onclick="toggleDarkMode()">Dark Mode</button>
+        <button onclick="toggleFullScreen()">Fullscreen</button>
     </div>
     <script>
         let workDuration = 25 * 60;
@@ -111,7 +111,6 @@
         let timeLeft = workDuration;
         let isWorkSession = true;
         let timerInterval;
-        let isDarkMode = false;
         let video = document.getElementById("background-video");
         
         function startTimer() {
@@ -157,12 +156,6 @@
                 `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
         }
         
-        function toggleDarkMode() {
-            isDarkMode = !isDarkMode;
-            document.body.style.background = isDarkMode ? "#fff" : "#111";
-            document.body.style.color = isDarkMode ? "#000" : "#fff";
-        }
-        
         function toggleSettings() {
             let menu = document.getElementById("settings-menu");
             menu.style.display = menu.style.display === "block" ? "none" : "block";
@@ -186,6 +179,14 @@
             timeLeft = isWorkSession ? workDuration : breakDuration;
             updateDisplay();
             document.getElementById("settings-menu").style.display = "none";
+        }
+        
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
         }
         
         let beepSound = new Audio("beep.mp3");
